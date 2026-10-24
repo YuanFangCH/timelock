@@ -74,10 +74,14 @@ try {
 
     New-Item -ItemType Directory -Path $releaseOutputDirectory -Force | Out-Null
     $builtApk = Join-Path $PSScriptRoot '..\app\build\outputs\apk\release\app-release.apk'
-    $releaseApk = Join-Path $releaseOutputDirectory 'TimeLock-0.1.0-preview.1.apk'
+    $buildFile = Join-Path $PSScriptRoot '..\app\build.gradle.kts'
+    $versionMatch = [regex]::Match((Get-Content -LiteralPath $buildFile -Raw), 'versionName\s*=\s*"([^"]+)"')
+    if (-not $versionMatch.Success) { throw 'Could not read versionName from app/build.gradle.kts.' }
+    $releaseName = "TimeLock-$($versionMatch.Groups[1].Value).apk"
+    $releaseApk = Join-Path $releaseOutputDirectory $releaseName
     Copy-Item -LiteralPath $builtApk -Destination $releaseApk -Force
     $digest = (Get-FileHash -LiteralPath $releaseApk -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$digest  TimeLock-0.1.0-preview.1.apk" |
+    "$digest  $releaseName" |
         Set-Content -LiteralPath (Join-Path $releaseOutputDirectory 'SHA256SUMS.txt') -Encoding ascii
     Write-Output "Built signed preview APK: $releaseApk"
     Write-Output "SHA-256: $digest"

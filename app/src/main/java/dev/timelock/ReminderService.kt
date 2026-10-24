@@ -11,7 +11,10 @@ import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.media.SoundPool
+import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
@@ -43,12 +46,13 @@ class ReminderService : Service() {
     inner class LocalBinder : Binder() {
         internal fun snapshot(): TimerSnapshot = currentSnapshot
 
-        internal fun preview() {
+        internal fun preview(soundIndex: Int, ringtoneUri: String?) {
             worker.post {
                 if (!soundReady || currentSnapshot.state != TimerSnapshot.STATE_IDLE) return@post
                 stopActiveSound("preview_replaced")
                 updateSnapshot(currentSnapshot.copy(lastError = ""))
-                playReminder(currentSnapshot.sessionId, generation, isPreview = true)
+                playReminder(currentSnapshot.sessionId, generation, isPreview = true,
+                    soundIndex = ReminderSounds.normalized(soundIndex, ringtoneUri), ringtoneUri = ringtoneUri)
             }
         }
 
@@ -60,7 +64,6 @@ class ReminderService : Service() {
     }
 
     private val binder = LocalBinder()
-    private val mainHandler = Handler(android.os.Looper.getMainLooper())
     private lateinit var workerThread: HandlerThread
     private lateinit var worker: Handler
     @Volatile private var currentSnapshot = TimerSnapshot()
@@ -69,12 +72,17 @@ class ReminderService : Service() {
     private lateinit var audioManager: AudioManager
     private lateinit var wakeLock: PowerManager.WakeLock
     private lateinit var soundPool: SoundPool
-    private var soundId = 0
+    private val soundIds = IntArray(ReminderSounds.BUILTIN_COUNT)
+    private val loadedSounds = BooleanArray(ReminderSounds.BUILTIN_COUNT)
     private var soundReady = false
+    private var selectedSoundIndex = ReminderSounds.BRIGHT
+    private var selectedRingtoneUri: String? = null
     private var pendingIntervalMs: Long? = null
     private var sessionCounter = 0L
     private var generation = 0L
     private var activeStreamId = 0
+    private var activeRingtone: Ringtone? = null
+    private var playbackToken = 0L
     private var focusRequest: AudioFocusRequest? = null
     private var focusRelease: Runnable? = null
     private var dueRunnable: Runnable? = null
@@ -102,19 +110,25 @@ class ReminderService : Service() {
             .build()
         soundPool.setOnLoadCompleteListener { _, loadedId, status ->
             worker.post {
-                if (loadedId != soundId) return@post
+                val index = soundIds.indexOf(loadedId)
+                if (index < 0) return@post
                 if (status != 0) {
                     pendingIntervalMs = null
                     updateSnapshot(TimerSnapshot(lastError = "提示音加载失败，请重新打开应用"))
-                    Log.e(TAG, "event=audio_load_failed status=$status")
+                    Log.e(TAG, "event=audio_load_failed index=$index status=$status")
                     return@post
                 }
-                soundReady = true
-                val pending = pendingIntervalMs
-                if (pending != null) startSession(pending)
+                loadedSounds[index] = true
+                if (loadedSounds.all { it }) {
+                    soundReady = true
+                    val pending = pendingIntervalMs
+                    if (pending != null) startSession(pending)
+                }
             }
         }
-        soundId = soundPool.load(this, R.raw.reminder, 1)
+        ReminderSounds.resourceIds.forEachIndexed { index, resourceId ->
+            soundIds[index] = soundPool.load(this, resourceId, 1)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
@@ -133,6 +147,8 @@ class ReminderService : Service() {
         }
 
         val intervalMs = intent?.getLongExtra(EXTRA_INTERVAL_MS, 30_000L) ?: 30_000L
+        val soundIndex = intent?.getIntExtra(EXTRA_SOUND_INDEX, ReminderSounds.BRIGHT) ?: ReminderSounds.BRIGHT
+        val ringtoneUri = intent?.getStringExtra(EXTRA_RINGTONE_URI)
         val expectedSession = intent?.getLongExtra(EXTRA_SESSION_ID, 0L) ?: 0L
         worker.post {
             when (action) {
@@ -147,6 +163,8 @@ class ReminderService : Service() {
                         stopSelf(startId)
                         return@post
                     }
+                    selectedSoundIndex = ReminderSounds.normalized(soundIndex, ringtoneUri)
+                    selectedRingtoneUri = ringtoneUri
                     updateSnapshot(currentSnapshot.copy(state = TimerSnapshot.STATE_PREPARING,
                         intervalMs = intervalMs, lastError = "", triggerCount = 0))
                     if (soundReady) startSession(intervalMs) else pendingIntervalMs = intervalMs
@@ -231,14 +249,22 @@ class ReminderService : Service() {
         scheduleDeadline(sessionId, expectedGeneration)
     }
 
-    private fun playReminder(sessionId: Long, expectedGeneration: Long, isPreview: Boolean = false) {
+    private fun playReminder(
+        sessionId: Long,
+        expectedGeneration: Long,
+        isPreview: Boolean = false,
+        soundIndex: Int = selectedSoundIndex,
+        ringtoneUri: String? = selectedRingtoneUri,
+    ) {
+        stopActiveSound("replaced")
         if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) == 0) {
             updateSnapshot(currentSnapshot.copy(lastError = if (isPreview) "闹钟音量为零，试听失败"
                 else "闹钟音量为零，已跳过提醒声"))
             Log.w(TAG, "event=audio_rejected sessionId=$sessionId reason=alarm_volume_zero preview=$isPreview")
             return
         }
-        abandonAudioFocus()
+
+        val playbackId = ++playbackToken
         val attributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -248,9 +274,11 @@ class ReminderService : Service() {
             .setAcceptsDelayedFocusGain(false)
             .setWillPauseWhenDucked(true)
             .setOnAudioFocusChangeListener({ change ->
-                if (change <= AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                if (change < 0) {
                     worker.post {
-                        if (expectedGeneration == generation) stopActiveSound("focus_lost")
+                        if (expectedGeneration == generation && playbackId == playbackToken) {
+                            stopActiveSound("focus_lost")
+                        }
                     }
                 }
             }, worker)
@@ -262,24 +290,54 @@ class ReminderService : Service() {
             return
         }
         focusRequest = request
-        val streamId = soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
-        if (streamId == 0) {
-            updateSnapshot(currentSnapshot.copy(lastError = if (isPreview) "试听失败"
-                else "提醒声播放失败"))
-            Log.w(TAG, "event=audio_rejected sessionId=$sessionId reason=soundpool_rejected preview=$isPreview")
-            abandonAudioFocus()
-            return
-        }
-        activeStreamId = streamId
-        if (!isPreview) updateSnapshot(currentSnapshot.copy(triggerCount = currentSnapshot.triggerCount + 1, lastError = ""))
-        Log.i(TAG, "event=${if (isPreview) "preview" else "audio_request"}_accepted sessionId=$sessionId streamId=$streamId")
 
-        val release = Runnable {
-            if (expectedGeneration == generation && activeStreamId == streamId) stopActiveSound("finished")
+        val normalizedIndex = ReminderSounds.normalized(soundIndex, ringtoneUri)
+        var audioError = ""
+        var soundDurationMs = BUILTIN_TAIL_MS
+        var playedSource = "builtin:$normalizedIndex"
+        if (normalizedIndex == ReminderSounds.SYSTEM) {
+            try {
+                val ringtone = RingtoneManager.getRingtone(this, Uri.parse(ringtoneUri))
+                    ?: throw IllegalArgumentException("No ringtone for selected URI")
+                ringtone.setAudioAttributes(attributes)
+                ringtone.setVolume(1f)
+                ringtone.setLooping(false)
+                activeRingtone = ringtone
+                ringtone.play()
+                soundDurationMs = SYSTEM_TAIL_MS
+                playedSource = "system"
+            } catch (exception: RuntimeException) {
+                Log.w(TAG, "event=system_audio_unavailable sessionId=$sessionId", exception)
+                activeRingtone?.stop()
+                activeRingtone = null
+                audioError = "手机铃声暂不可用，已播放内置提示音；请重新选择铃声"
+                playedSource = "builtin_fallback"
+            }
         }
-        focusRelease?.let(worker::removeCallbacks)
+        if (normalizedIndex != ReminderSounds.SYSTEM || playedSource == "builtin_fallback") {
+            val builtinIndex = if (playedSource == "builtin_fallback") ReminderSounds.BRIGHT else normalizedIndex
+            val streamId = soundPool.play(soundIds[builtinIndex], 1f, 1f, 1, 0, 1f)
+            if (streamId == 0) {
+                updateSnapshot(currentSnapshot.copy(lastError = if (isPreview) "试听失败"
+                    else "提醒声播放失败"))
+                Log.w(TAG, "event=audio_rejected sessionId=$sessionId reason=soundpool_rejected preview=$isPreview")
+                abandonAudioFocus()
+                return
+            }
+            activeStreamId = streamId
+        }
+
+        updateSnapshot(currentSnapshot.copy(
+            triggerCount = currentSnapshot.triggerCount + if (isPreview) 0 else 1,
+            lastError = audioError,
+        ))
+        Log.i(TAG, "event=${if (isPreview) "preview" else "audio_request"}_accepted " +
+            "sessionId=$sessionId source=$playedSource")
+        val release = Runnable {
+            if (expectedGeneration == generation && playbackId == playbackToken) stopActiveSound("finished")
+        }
         focusRelease = release
-        worker.postDelayed(release, SOUND_TAIL_MS)
+        worker.postDelayed(release, soundDurationMs)
     }
 
     private fun pauseSession() {
@@ -339,12 +397,18 @@ class ReminderService : Service() {
     }
 
     private fun stopActiveSound(reason: String) {
+        playbackToken += 1L
         focusRelease?.let(worker::removeCallbacks)
         focusRelease = null
         if (activeStreamId != 0) {
             soundPool.stop(activeStreamId)
             activeStreamId = 0
             Log.i(TAG, "event=audio_stopped reason=$reason")
+        }
+        activeRingtone?.let {
+            it.stop()
+            activeRingtone = null
+            Log.i(TAG, "event=system_audio_stopped reason=$reason")
         }
         abandonAudioFocus()
     }
@@ -438,8 +502,11 @@ class ReminderService : Service() {
 
     override fun onDestroy() {
         generation += 1L
+        playbackToken += 1L
         dueRunnable?.let(worker::removeCallbacks)
         focusRelease?.let(worker::removeCallbacks)
+        activeRingtone?.stop()
+        activeRingtone = null
         if (::soundPool.isInitialized) {
             if (activeStreamId != 0) soundPool.stop(activeStreamId)
             soundPool.release()
@@ -456,6 +523,8 @@ class ReminderService : Service() {
         const val ACTION_RESUME = "dev.timelock.action.RESUME"
         const val ACTION_STOP = "dev.timelock.action.STOP"
         const val EXTRA_INTERVAL_MS = "interval_ms"
+        const val EXTRA_SOUND_INDEX = "sound_index"
+        const val EXTRA_RINGTONE_URI = "ringtone_uri"
         const val EXTRA_SESSION_ID = "session_id"
         const val NOTIFICATION_PAUSE = ACTION_PAUSE
         const val NOTIFICATION_RESUME = ACTION_RESUME
@@ -464,12 +533,15 @@ class ReminderService : Service() {
         private const val CHANNEL_ID = "interval_status"
         private const val NOTIFICATION_ID = 7101
         private const val MAX_INTERVAL_MS = 86_400_000L
-        private const val SOUND_TAIL_MS = 650L
+        private const val BUILTIN_TAIL_MS = 900L
+        private const val SYSTEM_TAIL_MS = 2_500L
 
-        fun start(context: Context, intervalMs: Long) {
+        fun start(context: Context, intervalMs: Long, soundIndex: Int, ringtoneUri: String?) {
             val intent = Intent(context, ReminderService::class.java)
                 .setAction(ACTION_START)
                 .putExtra(EXTRA_INTERVAL_MS, intervalMs)
+                .putExtra(EXTRA_SOUND_INDEX, soundIndex)
+                .putExtra(EXTRA_RINGTONE_URI, ringtoneUri)
             if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent)
             else context.startService(intent)
         }

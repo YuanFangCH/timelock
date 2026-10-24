@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,7 +19,10 @@ import android.provider.Settings
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import android.os.SystemClock
@@ -38,8 +42,15 @@ class MainActivity : android.app.Activity() {
     private lateinit var startPauseButton: Button
     private lateinit var stopButton: Button
     private lateinit var previewButton: Button
+    private lateinit var soundSpinner: Spinner
+    private lateinit var selectedSoundText: TextView
+    private lateinit var choosePhoneSoundButton: Button
+    private lateinit var soundSettingsButton: Button
     private lateinit var batterySettingsButton: Button
     private var unit = UnitChoice.SECONDS
+    private var soundIndex = ReminderSounds.BRIGHT
+    private var ringtoneUri: String? = null
+    private var ringtoneTitle: String? = null
     private var timerService: ReminderService.LocalBinder? = null
     private var isBound = false
     private var pendingStartMs: Long? = null
@@ -68,6 +79,7 @@ class MainActivity : android.app.Activity() {
         setContentView(R.layout.activity_main)
         bindViews()
         restoreSettings()
+        setupSoundChoices()
         bindToTimerService()
         render()
     }
@@ -114,6 +126,35 @@ class MainActivity : android.app.Activity() {
         }
     }
 
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_RINGTONE || resultCode != RESULT_OK) return
+        val picked = data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        if (picked == null) {
+            renderError("不能选择无声铃声，请挑选有声音的铃声")
+            soundSpinner.setSelection(soundIndex)
+            return
+        }
+        val selected = try {
+            RingtoneManager.getRingtone(this, picked)
+        } catch (_: RuntimeException) {
+            null
+        }
+        if (selected == null) {
+            renderError("无法打开这个手机铃声，请选择其他声音")
+            soundSpinner.setSelection(soundIndex)
+            return
+        }
+        ringtoneUri = picked.toString()
+        ringtoneTitle = try { selected.getTitle(this) } catch (_: RuntimeException) { "手机铃声" }
+        soundIndex = ReminderSounds.SYSTEM
+        soundSpinner.setSelection(soundIndex)
+        saveSoundSettings()
+        updateSoundChoiceLabel()
+        renderError("")
+    }
+
     private fun bindViews() {
         intervalInput = findViewById(R.id.interval_input)
         secondsButton = findViewById(R.id.unit_seconds)
@@ -126,6 +167,10 @@ class MainActivity : android.app.Activity() {
         startPauseButton = findViewById(R.id.start_pause)
         stopButton = findViewById(R.id.stop)
         previewButton = findViewById(R.id.preview)
+        soundSpinner = findViewById(R.id.sound_options)
+        selectedSoundText = findViewById(R.id.selected_sound)
+        choosePhoneSoundButton = findViewById(R.id.choose_phone_sound)
+        soundSettingsButton = findViewById(R.id.sound_settings)
         batterySettingsButton = findViewById(R.id.battery_settings)
 
         secondsButton.setOnClickListener { setUnit(UnitChoice.SECONDS) }
@@ -146,8 +191,20 @@ class MainActivity : android.app.Activity() {
             }
         }
         previewButton.setOnClickListener {
-            timerService?.preview()
-            Toast.makeText(this, "正在试听提示音", Toast.LENGTH_SHORT).show()
+            val binder = timerService
+            if (binder == null) renderError("提示音服务尚未连接")
+            else {
+                binder.preview(soundIndex, ringtoneUri)
+                Toast.makeText(this, "正在试听当前提示音", Toast.LENGTH_SHORT).show()
+            }
+        }
+        choosePhoneSoundButton.setOnClickListener { openSystemTonePicker() }
+        soundSettingsButton.setOnClickListener {
+            try {
+                startActivity(Intent(Settings.ACTION_SOUND_SETTINGS))
+            } catch (_: RuntimeException) {
+                startActivity(Intent(Settings.ACTION_SETTINGS))
+            }
         }
         batterySettingsButton.setOnClickListener {
             try {
@@ -157,6 +214,57 @@ class MainActivity : android.app.Activity() {
                     Uri.parse("package:$packageName")))
             }
         }
+    }
+
+    private fun setupSoundChoices() {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ReminderSounds.names)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        soundSpinner.adapter = adapter
+        soundSpinner.setSelection(soundIndex)
+        soundSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (currentState() != TimerSnapshot.STATE_IDLE) return
+                if (position == ReminderSounds.SYSTEM && ringtoneUri == null) {
+                    soundSpinner.setSelection(soundIndex)
+                    openSystemTonePicker()
+                    return
+                }
+                if (soundIndex != position) {
+                    soundIndex = position
+                    saveSoundSettings()
+                }
+                updateSoundChoiceLabel()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+        updateSoundChoiceLabel()
+    }
+
+    private fun openSystemTonePicker() {
+        if (currentState() != TimerSnapshot.STATE_IDLE) return
+        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALL)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "选择间隔提醒铃声")
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI, Settings.System.DEFAULT_ALARM_ALERT_URI)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                ringtoneUri?.let(Uri::parse) ?: Settings.System.DEFAULT_ALARM_ALERT_URI)
+        try {
+            startActivityForResult(intent, REQUEST_RINGTONE)
+        } catch (_: RuntimeException) {
+            renderError("这部手机没有可用的系统铃声选择界面")
+        }
+    }
+
+    private fun updateSoundChoiceLabel() {
+        selectedSoundText.text = if (soundIndex == ReminderSounds.SYSTEM) {
+            "当前：手机铃声 · ${ringtoneTitle ?: "已选择"}"
+        } else {
+            "当前：${ReminderSounds.names[soundIndex]}"
+        }
+        choosePhoneSoundButton.text = if (ringtoneUri == null) "从手机铃声库选择" else "更换手机铃声"
     }
 
     private fun onMainAction() {
@@ -190,7 +298,7 @@ class MainActivity : android.app.Activity() {
 
     private fun startInterval(intervalMs: Long) {
         try {
-            ReminderService.start(this, intervalMs)
+            ReminderService.start(this, intervalMs, soundIndex, ringtoneUri)
             renderError("")
         } catch (_: RuntimeException) {
             renderError("后台提醒启动失败，请保持应用在前台后重试")
@@ -225,12 +333,27 @@ class MainActivity : android.app.Activity() {
         unit = runCatching { UnitChoice.valueOf(savedUnit ?: UnitChoice.SECONDS.name) }
             .getOrDefault(UnitChoice.SECONDS)
         intervalInput.setText(prefs.getString(KEY_VALUE, "30"))
+        ringtoneUri = prefs.getString(KEY_RINGTONE_URI, null)
+        ringtoneTitle = prefs.getString(KEY_RINGTONE_TITLE, null)
+        soundIndex = ReminderSounds.normalized(
+            prefs.getInt(KEY_SOUND_INDEX, ReminderSounds.BRIGHT), ringtoneUri)
     }
 
     private fun saveSettings() {
         getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE).edit()
             .putString(KEY_UNIT, unit.name)
             .putString(KEY_VALUE, intervalInput.text.toString())
+            .putInt(KEY_SOUND_INDEX, soundIndex)
+            .putString(KEY_RINGTONE_URI, ringtoneUri)
+            .putString(KEY_RINGTONE_TITLE, ringtoneTitle)
+            .apply()
+    }
+
+    private fun saveSoundSettings() {
+        getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_SOUND_INDEX, soundIndex)
+            .putString(KEY_RINGTONE_URI, ringtoneUri)
+            .putString(KEY_RINGTONE_TITLE, ringtoneTitle)
             .apply()
     }
 
@@ -272,6 +395,8 @@ class MainActivity : android.app.Activity() {
         findViewById<Button>(R.id.quick_120).isEnabled = !active
         stopButton.isEnabled = active
         previewButton.isEnabled = !active
+        soundSpinner.isEnabled = !active
+        choosePhoneSoundButton.isEnabled = !active
         updateUnitButtons()
         updateSystemNotices()
         if (snapshot.lastError.isNotBlank()) renderError(snapshot.lastError)
@@ -332,8 +457,12 @@ class MainActivity : android.app.Activity() {
     companion object {
         private const val REFRESH_INTERVAL_MS = 250L
         private const val REQUEST_NOTIFICATIONS = 3001
+        private const val REQUEST_RINGTONE = 3002
         private const val SETTINGS_NAME = "reminder_settings"
         private const val KEY_VALUE = "interval_value"
         private const val KEY_UNIT = "interval_unit"
+        private const val KEY_SOUND_INDEX = "sound_index"
+        private const val KEY_RINGTONE_URI = "ringtone_uri"
+        private const val KEY_RINGTONE_TITLE = "ringtone_title"
     }
 }

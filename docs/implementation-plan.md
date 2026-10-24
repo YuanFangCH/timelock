@@ -1,6 +1,6 @@
 # 间隔提醒：首版设计方案
 
-日期：2026-10-24。状态：首版源码、调试 APK 与 Android 15 模拟器首轮检查已完成；尚未完成荣耀 90 真机和深度 Doze 验收。公开验证摘要见[首发验证记录](../test-results/s0-s1-preview/verification.md)，完整本机运行证据保留在本地测试结果目录。GitHub 结论见[项目对照与源码证据](research/github-references.md)。
+日期：2026-10-24。状态：0.1.0-preview.3 提示音改进已构建，等待公开发布；荣耀 90 真机和深度 Doze 验收尚未完成。首发验证见[首轮记录](../test-results/s0-s1-preview/verification.md)，音频改进见[本轮记录](../test-results/s0-s2-sounds/verification.md)。
 
 ## 1. 目标与范围
 
@@ -13,7 +13,7 @@
 - 自定义正整数与单位（秒/分钟），建议范围为 1 秒至 24 小时；空值、零、负数、非整数和超范围输入显示具体错误。
 - 大字号显示下一次提醒的倒计时、当前间隔与已触发次数；音频请求失败单独提示。
 - 开始、暂停/继续、停止，以及“试听提示音”。
-- 内置约 0.5 秒的短提示音；提醒后自动结束声音并继续计时。
+- 内置四种更响的短提示音，支持从手机系统铃声库选择声音；提醒后自动结束声音并继续计时。
 - 记住上次使用的间隔；再次打开可直接开始。
 - 运行时显示常驻通知，提供暂停/继续和停止操作。
 - 目标为退到桌面、切换应用、锁屏后仍继续提醒。
@@ -63,7 +63,7 @@
 | MainActivity.kt + 主页面布局 | 输入、倒计时显示、授权和系统设置入口 |
 | ReminderService.kt | 唯一运行任务、调度、通知操作、生命周期和资源释放 |
 | IntervalTimer.kt | 纯计时状态转换及下一次触发时间计算，便于定向验证 |
-| ReminderSound.kt | 短音播放、音频焦点、停止与资源释放 |
+| ReminderSounds.kt + ReminderService.kt | 四种内置短音、系统铃声读取、试听/提醒共用播放路径、焦点和资源清理 |
 | ReminderSettings.kt | 仅保存上次间隔，使用 SharedPreferences |
 
 ### 3.2 计时策略
@@ -98,8 +98,10 @@
 
 ### 3.4 提示音
 
-- 内置自制约 0.4–0.5 秒的短音 WAV，采用 `SoundPool`、`maxStreams=1` 与 `USAGE_ALARM`，遵循系统闹钟音量；音频加载成功后再进入运行状态。音频资源由本项目生成并记录参数，不复制来源不明的铃声。
-- “试听”与正式提醒共用同一音频路径，方便安装后立即检查音量。
+- 内置四种原创建议音色：清脆双响、柔和双响、高低提示和三声短响，时长约 0.54–0.68 秒，WAV 峰值 0.78–0.83 满幅。采用 `SoundPool`、`maxStreams=1` 与 `USAGE_ALARM`，跟随系统闹钟音量。音频加载成功后再进入运行状态；波形由 `scripts/generate-tones.js` 生成，不复制来源不明的铃声。
+- 提供 Android `RingtoneManager.ACTION_RINGTONE_PICKER` 系统铃声库，可从闹钟、通知、来电等分类选取。保存所选 URI 和名称，重启后继续使用；活动提醒与试听共用相同声音配置。
+- 系统铃声播放使用 `Ringtone.setAudioAttributes(USAGE_ALARM)`、`setVolume(1f)` 和 `stop()`；到达停止期限、用户暂停/停止或音频焦点丢失时结束。若系统铃声无法读取，改播较响的内置默认声并显示错误。
+- 提供直达系统声音设置的按钮，方便用户调节闹钟音量。
 - 提醒声不叠加；停止/暂停立即停止当前声音。运行中禁用试听，避免产生额外提醒声。
 - 申请并正确释放瞬时音频焦点。通话、焦点被拒绝、音量为零等情况不强行调高音量或修改系统策略；记录未播放原因并让用户可见。
 - 使用 `AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`，每次短音前请求、短音结束后释放，焦点丢失立即停止。拒绝时跳过本次声音，继续下一节拍，不在稍后补播过时提示音。Android 15+ 要求请求焦点时应用在前台或存在前台服务；服务应先进入前台状态再请求声音焦点。[6]
@@ -107,7 +109,7 @@
 - 不申请勿扰绕过权限。勿扰模式、蓝牙输出和实际外放效果作为验收场景，不承诺所有声音模式下都能外放。
 - 不需要麦克风、文件读取或互联网权限；内置音频资源由应用直接读取。
 
-所需系统能力以实际实现为准，预计包括通知权限（Android 13+）、前台服务权限、Android 14+ 的 specialUse 权限和 WAKE_LOCK。电池优化使用系统设置入口，不自动修改用户设置。首版调度方案不依赖精确闹钟授权。
+所需系统能力以实际实现为准，预计包括通知权限（Android 13+）、前台服务权限、Android 14+ 的 specialUse 权限和 WAKE_LOCK。铃声通过系统选择器挑选，只保存被选 URI，不申请广泛媒体读取权限。电池优化和声音设置均由系统页面处理，不自动更改用户设置。首版调度方案不依赖精确闹钟授权。
 
 ## 4. 分阶段实施与验收门槛
 
@@ -153,6 +155,9 @@
 7. [Android：SoundPool](https://developer.android.com/reference/android/media/SoundPool)：异步加载、流控制、play 返回值与资源释放。
 8. [Android：Notification runtime permission](https://developer.android.com/develop/ui/views/notifications/notification-permission)：通知授权与前台服务通知的关系。
 9. [Android：Handle user-initiated stopping](https://developer.android.com/develop/background-work/services/fgs/handle-user-stopping)：用户从系统任务管理器停止应用时的行为。
+10. [Android：RingtoneManager](https://developer.android.com/reference/android/media/RingtoneManager)：系统铃声选择器、类型筛选与所选铃声 URI。
+11. [Android：Ringtone](https://developer.android.com/reference/android/media/Ringtone)：音频属性、播放音量、播放/停止控制。
+12. [Android：Settings](https://developer.android.com/reference/android/provider/Settings#ACTION_SOUND_SETTINGS)：打开系统声音设置页调整闹钟音量。
 
 ## 7. 可直接执行的工作拆分
 
@@ -289,9 +294,11 @@ GitHub 调研对照详见[研究报告](research/github-references.md)。默认�
 | --- | --- | --- |
 | S0 最小工程 | PASS | JDK 17 / Gradle 9.3.1 / AGP 9.1.0 离线构建；APK 安装、启动及 Debug 签名核验通过 |
 | S1 后台风险 | 模拟器屏幕关闭门槛 PASS | 30 秒连续 10 轮，延迟 7–31 ms；另有 50 秒和 2 分钟各一次。未测安全锁屏/深度 Doze |
-| S2 计时/声音 | 首轮 PASS | 8 个单元测试；暂停保存剩余 9.05 秒、继续后正确触发、停止资源清理。失败音焦点与进程回收待专门测试 |
+| S2 计时/声音 | PASS | 8 个计时/输入单元测试；四种提示音 PCM 峰值 78–83%；系统铃声库试听、重启保存、闹钟音量设置入口和 30 秒息屏系统铃声提醒通过 AVD 验证 |
 | S3 主页面 | 基本功能 PASS | 三种预设、单位输入、倒计时、设置保留、试听按钮已实现；AVD 一轮实测全部预设，字号矩阵待测 |
-| S4 预览打包 | RELEASED | 公开仓库与 `v0.1.0-preview.1` 预发布已创建；APK 和 SHA-256 附件在线，线上 APK 摘要与本地校验值相符 |
+| S4 预览打包 | RELEASED | `v0.1.0-preview.1`、`.2`、`.3` 均已发布；本机待补充 preview.3 的远端资产校验摘要 |
 | S5 荣耀 90 | 待执行 | 尚未连接真机；实际外放、MagicOS 后台策略、真机息屏/安全锁屏待验收 |
 
 Android 15 Pixel AVD 不是 Honor/MagicOS 仿真。`SoundPool` 请求被接受及结束日志不证明扬声器物理出声；实际外放没有回录或人工听音证据。公开测量和限制见[首发验证记录](../test-results/s0-s1-preview/verification.md)；完整本机命令、截图和日志留在本地结果目录。
+
+音量问题的直接源级发现：旧 WAV 峰值为 23.8%，SoundPool 播放比例已为 1.0；preview.3 的内置音 WAV 峰值为 78–83%，并增加 Android 系统铃声选择及闹钟音量设置入口。峰值测量不能替代荣耀 90 的实际听音评估。

@@ -1,11 +1,11 @@
-# 间隔提醒 0.1.0-preview.1 安装说明
+# 间隔提醒 0.1.0-preview.3 安装说明
 
 ## 获取与校验
 
-从 [0.1.0-preview.1 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.1) 下载 `TimeLock-0.1.0-preview.1.apk` 和 `SHA256SUMS.txt`。在项目本地构建调试版时，APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。校验文件完整性时，将 SHA-256 与下载后的计算值比较：
+从 [0.1.0-preview.3 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.3) 下载 `TimeLock-0.1.0-preview.3.apk` 和 `SHA256SUMS.txt`。在项目本地构建调试版时，APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。校验文件完整性时，将 SHA-256 与下载后的计算值比较：
 
 ```powershell
-Get-FileHash .\TimeLock-0.1.0-preview.1.apk -Algorithm SHA256
+Get-FileHash .\TimeLock-0.1.0-preview.3.apk -Algorithm SHA256
 ```
 
 ## 安装
@@ -17,7 +17,7 @@ Get-FileHash .\TimeLock-0.1.0-preview.1.apk -Algorithm SHA256
 ## 首次使用
 
 1. 选择 30 秒、50 秒或 2 分钟，或输入正整数并选“秒/分钟”。允许通知权限，点击“开始提醒”。第一次到达完整间隔后播放一声并继续循环。
-2. 按系统闹钟音量播放。在手机的声音设置中检查闹钟音量，点“试听提示音”确认输出。
+2. 试听四种内置声音，或从手机铃声库选择闹钟、通知及其他系统声音。提醒播放遵循系统闹钟音量；使用“调整手机闹钟音量”可直接打开系统音量设置。
 3. 锁屏前点击“打开电池优化设置”，按系统显示为应用允许后台活动。荣耀 90 具体设置名称依当前 MagicOS 版本而异；未设置时屏幕关闭后提醒可能延迟。
 4. 运行时在应用内或通知栏暂停、继续或停止。暂停会保留剩余时间；停止后释放后台计时。
 

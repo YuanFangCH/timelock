@@ -4,9 +4,9 @@
 
 ## 首次预览版
 
-首个预览版为 **0.1.0-preview.1**，支持 30 秒、50 秒、2 分钟快捷选项与自定义间隔，提供倒计时、试听、暂停、继续和停止。开始运行时显示持续通知，用户可在通知栏控制；屏幕关闭后继续运行。后台可靠性会受系统省电/厂商限制影响。详见[预览版说明](docs/release-notes/0.1.0-preview.1.md)。
+当前预览版为 **0.1.0-preview.3**，支持 30 秒、50 秒、2 分钟快捷选项与自定义间隔，提供倒计时、试听、暂停、继续和停止。内置四种更响的提示音，也可选择手机铃声库里的系统声音并调整闹钟音量。运行时显示持续通知，屏幕关闭后继续循环。后台可靠性会受系统省电和厂商策略影响。详见[预览版说明](docs/release-notes/0.1.0-preview.3.md)。
 
-从 [0.1.0-preview.1 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.1) 下载 APK 和 SHA-256 文件；安装方法见[安装说明](docs/install.md)。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
+从 [0.1.0-preview.3 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.3) 下载 APK 和 SHA-256 文件；安装方法见[安装说明](docs/install.md)。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
 
 ## 技术与构建
 
@@ -19,7 +19,7 @@
 
 若 JDK 未在 `PATH` 中，先在当前 PowerShell 窗口设置 `$env:JAVA_HOME`。
 
-首发源码在 Android 15 / API 35 Pixel 配置的 AVD 上完成 8 项计时相关单元测试及三个提醒间隔的短时息屏验证。签名预览 APK 也已安装启动。荣耀 90 真机、深度 Doze、锁屏音频可听性和耗电表现待验收，不以 AVD 结果代替真机结论。
+首发源码在 Android 15 / API 35 Pixel 配置的 AVD 上完成 8 项计时相关单元测试及 30 秒、50 秒、2 分钟间隔的短时息屏验证；preview.3 的四种内置音、手机系统铃声选择、声音设置入口和系统铃声息屏提醒也通过模拟器检查。荣耀 90 真机、深度 Doze、实际锁屏可听性和耗电表现待验收，不以 AVD 结果代替真机结论。
 
 正式签名密钥存于本机 Windows 用户目录的 `LOCALAPPDATA\TimeLock\Signing`，构建脚本用当前 Windows 用户的 DPAPI 解密保存的密码。请保管签名备份；私钥和密码均不可放入仓库、日志或发布附件。首次生成签名并构建预览 APK：
 
@@ -39,3 +39,4 @@ $env:JAVA_HOME = '<JDK 17 installation path>'
 - `docs/release-notes/`：对外预览版说明。
 - `scripts/build-release.ps1`：本机创建签名并构建 APK。
 - `test-results/s0-s1-preview/verification.md`：首发验证结论。
+- `test-results/s0-s2-sounds/verification.md`：提示音电平、系统铃声库与试听验证。
