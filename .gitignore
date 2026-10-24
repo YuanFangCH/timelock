@@ -1,0 +1,15 @@
+.gradle/
+build/
+**/build/
+local.properties
+*.iml
+.idea/
+dist/
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+test-results/*
+!test-results/s0-s1-preview/
+test-results/s0-s1-preview/*
+!test-results/s0-s1-preview/verification.md
