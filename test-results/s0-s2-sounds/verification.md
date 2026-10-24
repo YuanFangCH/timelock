@@ -36,6 +36,6 @@ Get-ChildItem app\src\main\res\raw\reminder_*.wav | ForEach-Object {
 | 声音设置按钮 | PASS；打开 Android “Sound & vibration” 设置页 |
 | 定向计时回归 | PASS，8/8；Release `lintVitalRelease` 通过 |
 
-Release 包 SHA-256：`bd721090e766b80bae992d879334a7d52ccadb878ac10b8f85becf7e7fb41bd4`。预览签名证书保持与 preview.1/.2 相同。
+Release 包 SHA-256：`bd721090e766b80bae992d879334a7d52ccadb878ac10b8f85becf7e7fb41bd4`。GitHub Release asset digest 与此值一致。预览签名证书 SHA-256：`24c9e696c832c17355aa118c0b3ef0cb032c145b7c2dacc0adb597af1a565c9c`，与 preview.1/.2 相同。
 
 没有连接荣耀 90。模拟器日志只证明 Android 接受并播放了对应音频流，没有实际扬声器录音或人工听音证据；系统音量页仅打开检查，没有调整音量滑块。
