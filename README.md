@@ -6,7 +6,7 @@
 
 首个预览版为 **0.1.0-preview.1**，支持 30 秒、50 秒、2 分钟快捷选项与自定义间隔，提供倒计时、试听、暂停、继续和停止。开始运行时显示持续通知，用户可在通知栏控制；屏幕关闭后继续运行。后台可靠性会受系统省电/厂商限制影响。详见[预览版说明](docs/release-notes/0.1.0-preview.1.md)。
 
-从 [GitHub Releases](https://github.com/YuanFangCH/timelock/releases/latest) 下载 APK 和 SHA-256 文件；安装方法见[安装说明](docs/install.md)。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
+从 [0.1.0-preview.1 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.1) 下载 APK 和 SHA-256 文件；安装方法见[安装说明](docs/install.md)。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
 
 ## 技术与构建
 

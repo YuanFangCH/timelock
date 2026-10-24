@@ -1,20 +1,18 @@
-# 间隔提醒 0.1.0 调试版安装说明
+# 间隔提醒 0.1.0-preview.1 安装说明
 
 ## 获取与校验
 
-使用 [TimeLock-0.1.0-debug.apk](../dist/TimeLock-0.1.0-debug.apk)。校验文件完整性时，将下面的 SHA-256 与下载后计算值比较：
+从 [0.1.0-preview.1 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.1) 下载 `TimeLock-0.1.0-preview.1.apk` 和 `SHA256SUMS.txt`。在项目本地构建调试版时，APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。校验文件完整性时，将 SHA-256 与下载后的计算值比较：
 
 ```powershell
-Get-FileHash .\TimeLock-0.1.0-debug.apk -Algorithm SHA256
+Get-FileHash .\TimeLock-0.1.0-preview.1.apk -Algorithm SHA256
 ```
-
-对应摘要保存于 [`SHA256SUMS.txt`](../dist/SHA256SUMS.txt)。
 
 ## 安装
 
 把 APK 传到手机并打开；系统提示允许当前文件管理器安装未知应用时，按需允许，然后安装并打开“间隔提醒”。本调试包目标 SDK 36，最低系统声明 Android 10 / API 29；目前实测的是 Android 15 / API 35 模拟器。
 
-当前包由 Android Debug 证书签名，用于开发、试装和真机验收。不要把它当成长期发布签名；要让后续正式包覆盖安装，必须使用同一份发布证书重新构建。签名私钥不可放进项目目录或 APK 下载包。
+预览包使用项目独立签名证书。调试构建使用 Android Debug 证书；从调试包切换至预览包时，Android 会因为签名不同而拒绝覆盖安装，需要先卸载调试包。卸载会删除该应用在设备上保存的上次间隔设置。后续预览版本将使用相同预览签名，可直接覆盖更新。
 
 ## 首次使用
 
@@ -27,4 +25,4 @@ Get-FileHash .\TimeLock-0.1.0-debug.apk -Algorithm SHA256
 
 ## 卸载或更新
 
-卸载按系统流程操作。开发调试更新可使用相同调试证书覆盖安装；如签名不匹配，Android 会拒绝覆盖，卸载后再安装会清除应用内上次间隔设置。
+卸载按系统流程操作。调试版只可由同一调试证书覆盖更新；预览版可由后续使用相同预览证书的版本覆盖更新。
