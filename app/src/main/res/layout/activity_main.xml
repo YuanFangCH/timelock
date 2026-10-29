@@ -236,7 +236,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="6dp"
-            android:text="调整手机闹钟音量"
+            android:text="调整手机媒体音量"
             android:textAllCaps="false" />
 
         <TextView

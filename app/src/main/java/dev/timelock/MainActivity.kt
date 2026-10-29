@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.media.AudioManager
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -77,6 +78,7 @@ class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        volumeControlStream = AudioManager.STREAM_MUSIC
         bindViews()
         restoreSettings()
         setupSoundChoices()
@@ -408,7 +410,7 @@ class MainActivity : android.app.Activity() {
             (getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).areNotificationsEnabled()
         } else true
         notificationNotice.text = if (notificationsEnabled) {
-            "通知已开启，锁屏时可从通知栏暂停或停止。提醒声使用系统闹钟音量。"
+            "通知已开启，锁屏时可从通知栏暂停或停止。提醒声使用媒体音量，跟随系统当前媒体输出（如蓝牙耳机）。"
         } else {
             "通知尚未开启。计时仍可运行，但锁屏时可能看不到控制按钮。"
         }

@@ -101,7 +101,7 @@ class ReminderService : Service() {
         createNotificationChannel()
 
         val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         soundPool = SoundPool.Builder()
@@ -257,16 +257,16 @@ class ReminderService : Service() {
         ringtoneUri: String? = selectedRingtoneUri,
     ) {
         stopActiveSound("replaced")
-        if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) == 0) {
-            updateSnapshot(currentSnapshot.copy(lastError = if (isPreview) "闹钟音量为零，试听失败"
-                else "闹钟音量为零，已跳过提醒声"))
-            Log.w(TAG, "event=audio_rejected sessionId=$sessionId reason=alarm_volume_zero preview=$isPreview")
+        if (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
+            updateSnapshot(currentSnapshot.copy(lastError = if (isPreview) "媒体音量为零，试听失败"
+                else "媒体音量为零，已跳过提醒声"))
+            Log.w(TAG, "event=audio_rejected sessionId=$sessionId reason=media_volume_zero preview=$isPreview")
             return
         }
 
         val playbackId = ++playbackToken
         val attributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
