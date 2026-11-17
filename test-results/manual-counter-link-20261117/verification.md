@@ -28,7 +28,7 @@
 | 加一、归零以及关闭关联的全状态验证 | NOT RUN | 未覆盖每种按钮在运行中、暂停、空闲、停止状态下的完整组合。 |
 | 模拟器息屏和长期后台提醒 | NOT RUN | 本次只核验前台交互与一次提醒触发。 |
 | 旧签名覆盖安装 | NOT SUPPORTED | 原签名密钥无法恢复。本版使用新证书；preview.1 至 preview.6 用户需先卸载旧版，设置将丢失。 |
-| GitHub 发布 | PENDING | 源码推送和 GitHub Release 尚待完成。 |
+| GitHub 发布与下载校验 | PASS | 提交 `40e84ca` 和标签 `v0.1.0-preview.7` 已推送；Pre-release 含 APK 与 `SHA256SUMS.txt`。从 GitHub 下载的 APK SHA-256 与本地值一致。 |
 
 ## 构建命令
 
