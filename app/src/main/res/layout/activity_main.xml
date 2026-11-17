@@ -136,10 +136,89 @@
         </LinearLayout>
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:text="已完成组数"
+            android:textColor="#334155"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/completed_sets"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="2dp"
+            android:accessibilityLiveRegion="polite"
+            android:autoSizeMaxTextSize="56sp"
+            android:autoSizeMinTextSize="26sp"
+            android:autoSizeStepGranularity="2sp"
+            android:autoSizeTextType="uniform"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="0 组"
+            android:textColor="#142235"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/decrement_sets"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:minWidth="0dp"
+                android:text="减一"
+                android:textAllCaps="false"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/reset_sets"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:minWidth="0dp"
+                android:text="归零"
+                android:textAllCaps="false"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/increment_sets"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="加一"
+                android:textAllCaps="false"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/restart_timer_on_increment"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="6dp"
+            android:checked="true"
+            android:text="操作组数后重启计时"
+            android:textColor="#334155"
+            android:textSize="15sp" />
+
+        <TextView
             android:id="@+id/countdown"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
+            android:layout_marginTop="28dp"
             android:gravity="center"
             android:text="00:30"
             android:textColor="#142235"

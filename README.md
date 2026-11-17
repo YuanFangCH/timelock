@@ -4,14 +4,16 @@
 
 ## 当前预览版
 
-当前预览版为 **0.1.0-preview.4**，支持 30 秒、50 秒、2 分钟快捷选项与自定义间隔，提供倒计时、试听、暂停、继续和停止。内置四种更响的提示音，也可选择手机铃声库里的系统声音并调整媒体音量。运行时显示持续通知，屏幕关闭后继续循环。后台可靠性会受系统省电和厂商策略影响。详见[预览版说明](docs/release-notes/0.1.0-preview.4.md)。
+当前预览版 **0.1.0-preview.7** 增加手动组数联动行为：加一、减一、归零都会重启计时并清零累计触发，计时未开始或已停止时按当前设置启动。此版本使用新的预览签名证书；从 preview.1 至 preview.6 升级需先卸载旧版，应用内设置会被清除。安装说明见 [docs/install.md](docs/install.md)，验证记录见 [test-results/manual-counter-link-20261117/verification.md](test-results/manual-counter-link-20261117/verification.md)。
 
-从 [0.1.0-preview.4 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.4) 下载 APK 和 SHA-256 文件；安装方法见[安装说明](docs/install.md)。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
+preview.7 延续计时器的快捷间隔、自定义间隔、试听、暂停、继续、停止、系统铃声选择和持续通知功能。提示音使用媒体音量并跟随当前媒体输出；后台可靠性会受系统省电和厂商策略影响。详见 [preview.7 发布说明](docs/release-notes/0.1.0-preview.7.md)。
 
-## 0.1.0-preview.4 媒体通道修复
+从 [0.1.0-preview.7 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.7) 下载 APK 和 SHA-256 文件；源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
 
-- 提醒声与试听统一使用媒体通道，跟随系统当前媒体输出（如蓝牙耳机）；音量检查和界面音量键同步使用媒体音量。媒体音量为零时跳过播放，闹钟音量不再控制提醒声。
-- 蓝牙实际可听性、运行中连接/断开耳机及厂商后台行为待真机验收。验证记录：`test-results/bluetooth-media-20261029/verification.md`。
+## 手动组数计数器
+
+- 主页面加一、减一和归零会在关联开关开启时重启计时并清零累计触发；未运行时按当前设定启动，关闭时只改组数。
+- preview.7 的定向构建和模拟器交互记录见 `test-results/manual-counter-link-20261117/verification.md`。
 
 ## 技术与构建
 
@@ -24,7 +26,7 @@
 
 若 JDK 未在 `PATH` 中，先在当前 PowerShell 窗口设置 `$env:JAVA_HOME`。
 
-首发源码在 Android 15 / API 35 Pixel 配置的 AVD 上完成 8 项计时相关单元测试及 30 秒、50 秒、2 分钟间隔的短时息屏验证；preview.3 的声音选项和系统铃声息屏提醒已通过模拟器检查。preview.4 的定向验证见上方记录。荣耀 90 真机、深度 Doze、实际锁屏可听性和耗电表现待验收，不以 AVD 结果代替真机结论。
+preview.7 的 Debug/Release 构建、定向计时测试、Release 签名及 Android 15 AVD 交互通过。模拟器验证详情与尚未覆盖项目见 `test-results/manual-counter-link-20261117/verification.md`。荣耀 90 真机的锁屏可听性和厂商后台行为仍待验收。
 
 本机 E 盘于 2026-10-29 出现磁盘 I/O 与 NTFS 写入错误；原 SDK、AVD 和全局 Gradle 缓存不可作为可靠运行环境。本次恢复工具位于忽略的 `.local/`，构建时设置 `ANDROID_HOME` 与 `ANDROID_SDK_ROOT` 为项目 `.local/android-sdk`、`GRADLE_USER_HOME` 为 `.local/gradle-home`，JDK 仍使用本机 JDK 17。独立 AVD 为 `timelock_recovery_35`，AVD 目录为 `.local/avd`，Android 用户目录为 `.local/android-user`；启动时分别设置 `ANDROID_AVD_HOME`、`ANDROID_USER_HOME`。不要把工具、镜像或签名提交到仓库。
 

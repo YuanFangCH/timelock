@@ -18,4 +18,10 @@ test-results/s0-s1-preview/*
 !test-results/s0-s2-sounds/
 test-results/s0-s2-sounds/*
 !test-results/s0-s2-sounds/verification.md
+!test-results/manual-counter-20261109/
+test-results/manual-counter-20261109/*
+!test-results/manual-counter-20261109/verification.md
+!test-results/manual-counter-link-20261117/
+test-results/manual-counter-link-20261117/*
+!test-results/manual-counter-link-20261117/verification.md
 tests/agent-temp/

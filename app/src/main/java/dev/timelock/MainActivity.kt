@@ -24,6 +24,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import android.os.SystemClock
@@ -38,6 +39,11 @@ class MainActivity : android.app.Activity() {
     private lateinit var countdown: TextView
     private lateinit var stateText: TextView
     private lateinit var errorText: TextView
+    private lateinit var completedSetsText: TextView
+    private lateinit var decrementSetsButton: Button
+    private lateinit var resetSetsButton: Button
+    private lateinit var incrementSetsButton: Button
+    private lateinit var restartTimerOnIncrementSwitch: Switch
     private lateinit var notificationNotice: TextView
     private lateinit var batteryNotice: TextView
     private lateinit var startPauseButton: Button
@@ -52,6 +58,8 @@ class MainActivity : android.app.Activity() {
     private var soundIndex = ReminderSounds.BRIGHT
     private var ringtoneUri: String? = null
     private var ringtoneTitle: String? = null
+    private var completedSets = 0
+    private var restartTimerOnIncrement = true
     private var timerService: ReminderService.LocalBinder? = null
     private var isBound = false
     private var pendingStartMs: Long? = null
@@ -164,6 +172,11 @@ class MainActivity : android.app.Activity() {
         countdown = findViewById(R.id.countdown)
         stateText = findViewById(R.id.state_text)
         errorText = findViewById(R.id.error_text)
+        completedSetsText = findViewById(R.id.completed_sets)
+        decrementSetsButton = findViewById(R.id.decrement_sets)
+        resetSetsButton = findViewById(R.id.reset_sets)
+        incrementSetsButton = findViewById(R.id.increment_sets)
+        restartTimerOnIncrementSwitch = findViewById(R.id.restart_timer_on_increment)
         notificationNotice = findViewById(R.id.notification_notice)
         batteryNotice = findViewById(R.id.battery_notice)
         startPauseButton = findViewById(R.id.start_pause)
@@ -180,6 +193,13 @@ class MainActivity : android.app.Activity() {
         findViewById<Button>(R.id.quick_30).setOnClickListener { setPreset(30L, UnitChoice.SECONDS) }
         findViewById<Button>(R.id.quick_50).setOnClickListener { setPreset(50L, UnitChoice.SECONDS) }
         findViewById<Button>(R.id.quick_120).setOnClickListener { setPreset(2L, UnitChoice.MINUTES) }
+        decrementSetsButton.setOnClickListener { onCompletedSetsAction(completedSets - 1) }
+        resetSetsButton.setOnClickListener { onCompletedSetsAction(0) }
+        incrementSetsButton.setOnClickListener { onCompletedSetsAction(completedSets + 1) }
+        restartTimerOnIncrementSwitch.setOnCheckedChangeListener { _, checked ->
+            restartTimerOnIncrement = checked
+            saveCounterLinkSetting()
+        }
 
         startPauseButton.setOnClickListener { onMainAction() }
         stopButton.setOnClickListener {
@@ -275,27 +295,30 @@ class MainActivity : android.app.Activity() {
             TimerSnapshot.STATE_RUNNING -> ReminderService.sendAction(this, ReminderService.ACTION_PAUSE, snapshot.sessionId)
             TimerSnapshot.STATE_PAUSED -> ReminderService.sendAction(this, ReminderService.ACTION_RESUME, snapshot.sessionId)
             TimerSnapshot.STATE_PREPARING -> Unit
-            else -> {
-                val intervalMs = IntervalTimer.parseInterval(intervalInput.text.toString(), unit.toIntervalUnit())
-                if (intervalMs == null) {
-                    renderError("请输入 1 秒至 24 小时的正整数间隔")
-                    intervalInput.requestFocus()
-                    return
-                }
-                saveSettings()
-                pendingStartMs = intervalMs
-                hideKeyboard()
-                if (Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
-                } else {
-                    pendingStartMs = null
-                    startInterval(intervalMs)
-                }
-            }
+            else -> requestTimerStart()
         }
         render()
+    }
+
+    private fun requestTimerStart() {
+        if (pendingStartMs != null || currentState() == TimerSnapshot.STATE_PREPARING) return
+        val intervalMs = IntervalTimer.parseInterval(intervalInput.text.toString(), unit.toIntervalUnit())
+        if (intervalMs == null) {
+            Toast.makeText(this, "请输入 1 秒至 24 小时的正整数间隔", Toast.LENGTH_LONG).show()
+            intervalInput.requestFocus()
+            return
+        }
+        saveSettings()
+        pendingStartMs = intervalMs
+        hideKeyboard()
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        } else {
+            pendingStartMs = null
+            startInterval(intervalMs)
+        }
     }
 
     private fun startInterval(intervalMs: Long) {
@@ -337,8 +360,12 @@ class MainActivity : android.app.Activity() {
         intervalInput.setText(prefs.getString(KEY_VALUE, "30"))
         ringtoneUri = prefs.getString(KEY_RINGTONE_URI, null)
         ringtoneTitle = prefs.getString(KEY_RINGTONE_TITLE, null)
+        completedSets = prefs.getInt(KEY_COMPLETED_SETS, 0).coerceAtLeast(0)
+        restartTimerOnIncrement = prefs.getBoolean(KEY_RESTART_TIMER_ON_INCREMENT, true)
+        restartTimerOnIncrementSwitch.isChecked = restartTimerOnIncrement
         soundIndex = ReminderSounds.normalized(
             prefs.getInt(KEY_SOUND_INDEX, ReminderSounds.BRIGHT), ringtoneUri)
+        renderCompletedSets()
     }
 
     private fun saveSettings() {
@@ -356,6 +383,43 @@ class MainActivity : android.app.Activity() {
             .putInt(KEY_SOUND_INDEX, soundIndex)
             .putString(KEY_RINGTONE_URI, ringtoneUri)
             .putString(KEY_RINGTONE_TITLE, ringtoneTitle)
+            .apply()
+    }
+
+    private fun saveCompletedSets(value: Int) {
+        completedSets = value.coerceAtLeast(0)
+        renderCompletedSets()
+        getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_COMPLETED_SETS, completedSets)
+            .apply()
+    }
+
+    private fun renderCompletedSets() {
+        completedSetsText.text = "$completedSets 组"
+        decrementSetsButton.isEnabled = completedSets > 0
+        resetSetsButton.isEnabled = completedSets > 0
+        incrementSetsButton.isEnabled = completedSets < Int.MAX_VALUE
+    }
+
+    private fun onCompletedSetsAction(value: Int) {
+        saveCompletedSets(value)
+        if (!restartTimerOnIncrement) return
+        applyCounterLink()
+    }
+
+    private fun applyCounterLink() {
+        val snapshot = timerService?.snapshot() ?: TimerSnapshot()
+        when (snapshot.state) {
+            TimerSnapshot.STATE_RUNNING, TimerSnapshot.STATE_PAUSED ->
+                ReminderService.sendAction(this, ReminderService.ACTION_RESTART, snapshot.sessionId)
+            TimerSnapshot.STATE_PREPARING -> Unit
+            else -> requestTimerStart()
+        }
+    }
+
+    private fun saveCounterLinkSetting() {
+        getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_RESTART_TIMER_ON_INCREMENT, restartTimerOnIncrement)
             .apply()
     }
 
@@ -466,5 +530,7 @@ class MainActivity : android.app.Activity() {
         private const val KEY_SOUND_INDEX = "sound_index"
         private const val KEY_RINGTONE_URI = "ringtone_uri"
         private const val KEY_RINGTONE_TITLE = "ringtone_title"
+        private const val KEY_COMPLETED_SETS = "completed_sets"
+        private const val KEY_RESTART_TIMER_ON_INCREMENT = "restart_timer_on_increment"
     }
 }

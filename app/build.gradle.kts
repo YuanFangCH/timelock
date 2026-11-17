@@ -19,8 +19,8 @@ android {
         applicationId = "dev.timelock"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.1.0-preview.4"
+        versionCode = 8
+        versionName = "0.1.0-preview.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

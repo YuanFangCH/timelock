@@ -171,6 +171,7 @@ class ReminderService : Service() {
                 }
                 ACTION_PAUSE -> if (isCurrentSession(expectedSession)) pauseSession()
                 ACTION_RESUME -> if (isCurrentSession(expectedSession)) resumeSession()
+                ACTION_RESTART -> if (isCurrentSession(expectedSession)) restartSession()
                 ACTION_STOP -> if (expectedSession == 0L || isCurrentSession(expectedSession)) stopSession(startId)
             }
         }
@@ -179,11 +180,14 @@ class ReminderService : Service() {
 
     private fun startAsForeground() {
         val notification = buildNotification(currentSnapshot.copy(state = TimerSnapshot.STATE_PREPARING))
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        // Keep the playback type active between reminders so background audio focus is eligible.
+        val playbackType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        val serviceTypes = if (Build.VERSION.SDK_INT >= 34) {
+            playbackType or ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else {
-            startForeground(NOTIFICATION_ID, notification)
+            playbackType
         }
+        startForeground(NOTIFICATION_ID, notification, serviceTypes)
     }
 
     private fun startSession(intervalMs: Long) {
@@ -381,6 +385,39 @@ class ReminderService : Service() {
         scheduleDeadline(currentSnapshot.sessionId, generation)
     }
 
+    private fun restartSession() {
+        if (currentSnapshot.state != TimerSnapshot.STATE_RUNNING &&
+            currentSnapshot.state != TimerSnapshot.STATE_PAUSED
+        ) return
+        if (!wakeLock.isHeld) {
+            try {
+                wakeLock.acquire()
+            } catch (exception: RuntimeException) {
+                updateSnapshot(currentSnapshot.copy(lastError = "无法重启锁屏计时，请检查系统电池设置"))
+                Log.e(TAG, "event=wake_lock_failed_on_restart", exception)
+                return
+            }
+        }
+        generation += 1L
+        dueRunnable?.let(worker::removeCallbacks)
+        dueRunnable = null
+        stopActiveSound("restarted")
+        val now = SystemClock.elapsedRealtime()
+        val intervalMs = currentSnapshot.intervalMs
+        pausedRemainingMs = intervalMs
+        updateSnapshot(currentSnapshot.copy(
+            state = TimerSnapshot.STATE_RUNNING,
+            deadlineMs = now + intervalMs,
+            remainingMs = intervalMs,
+            triggerCount = 0,
+            lastError = "",
+        ))
+        Log.i(TAG, "event=session_restarted sessionId=${currentSnapshot.sessionId} " +
+            "intervalMs=$intervalMs elapsedMs=$now")
+        updateNotification()
+        scheduleDeadline(currentSnapshot.sessionId, generation)
+    }
+
     private fun stopSession(startId: Int) {
         val sessionId = currentSnapshot.sessionId
         generation += 1L
@@ -521,6 +558,7 @@ class ReminderService : Service() {
         const val ACTION_START = "dev.timelock.action.START"
         const val ACTION_PAUSE = "dev.timelock.action.PAUSE"
         const val ACTION_RESUME = "dev.timelock.action.RESUME"
+        const val ACTION_RESTART = "dev.timelock.action.RESTART"
         const val ACTION_STOP = "dev.timelock.action.STOP"
         const val EXTRA_INTERVAL_MS = "interval_ms"
         const val EXTRA_SOUND_INDEX = "sound_index"
