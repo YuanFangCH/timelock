@@ -1,18 +1,18 @@
-# 间隔提醒 0.1.0-preview.7 安装说明
+# 间隔提醒 0.1.0-preview.8 安装说明
 
 ## 获取与校验
 
-从 [0.1.0-preview.7 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.7) 下载 `TimeLock-0.1.0-preview.7.apk` 和 `SHA256SUMS.txt`。在项目本地构建调试版时，APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。校验文件完整性时，将 SHA-256 与下载后的计算值比较：
+从 [0.1.0-preview.8 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.8) 下载 `TimeLock-0.1.0-preview.8.apk` 和 `SHA256SUMS.txt`。在项目本地构建调试版时，APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。计算 APK 的 SHA-256 并与校验文件中的值比较。
 
 ```powershell
-Get-FileHash .\TimeLock-0.1.0-preview.7.apk -Algorithm SHA256
+Get-FileHash .\TimeLock-0.1.0-preview.8.apk -Algorithm SHA256
 ```
 
 ## 安装
 
-把 APK 传到手机并打开；系统提示允许当前文件管理器安装未知应用时，按需允许，然后安装并打开“间隔提醒”。本预览包目标 SDK 36，最低系统声明 Android 10 / API 29；安装启动检查覆盖 Android 15 / API 35 AVD 和荣耀 90（`REA-AN00`），最终交互范围见 `test-results/manual-counter-20261109/verification.md`。
+把 APK 传到手机并打开。系统提示允许当前文件管理器安装未知应用时，按需允许，然后安装并打开“间隔提醒”。本预览包最低支持 Android 10 / API 29，目标 SDK 为 36。Android 15 模拟器验证见 [界面改版验证](../test-results/ui-refresh/verification.md)，荣耀 90 真机待验收。
 
-preview.7 使用新的预览签名证书。此前从 preview.1 至 preview.6 安装的版本无法直接覆盖更新；请先卸载旧版，再安装 preview.7。卸载会删除应用保存的间隔、声音和组数设置。后续预览版会继续使用 preview.7 的签名证书，可以直接覆盖更新。调试构建使用 Android Debug 证书，不能覆盖安装预览包。
+preview.8 沿用 preview.7 的签名证书，可直接覆盖安装并保留设置。从 preview.1 至 preview.6 升级时，请先卸载旧版。卸载会清除应用保存的间隔、声音和组数设置。调试构建使用 Android Debug 证书，无法与预览版相互覆盖安装。
 
 ## 首次使用
 

@@ -4,16 +4,18 @@
 
 ## 当前预览版
 
-当前预览版 **0.1.0-preview.7** 增加手动组数联动行为：加一、减一、归零都会重启计时并清零累计触发，计时未开始或已停止时按当前设置启动。此版本使用新的预览签名证书；从 preview.1 至 preview.6 升级需先卸载旧版，应用内设置会被清除。安装说明见 [docs/install.md](docs/install.md)，验证记录见 [test-results/manual-counter-link-20261117/verification.md](test-results/manual-counter-link-20261117/verification.md)。
+当前预览版 **0.1.0-preview.8** 更新了主界面和应用图标。从 preview.7 可直接覆盖安装。从 preview.1 至 preview.6 升级需先卸载旧版，卸载会清除应用内设置。详见 [安装说明](docs/install.md) 和 [preview.8 发布说明](docs/release-notes/0.1.0-preview.8.md)。
 
-preview.7 延续计时器的快捷间隔、自定义间隔、试听、暂停、继续、停止、系统铃声选择和持续通知功能。提示音使用媒体音量并跟随当前媒体输出；后台可靠性会受系统省电和厂商策略影响。详见 [preview.7 发布说明](docs/release-notes/0.1.0-preview.7.md)。
-
-从 [0.1.0-preview.7 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.7) 下载 APK 和 SHA-256 文件；源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
+从 [0.1.0-preview.8 发布页](https://github.com/YuanFangCH/timelock/releases/tag/v0.1.0-preview.8) 下载 APK 和 SHA-256 校验文件。源码采用 MIT 许可证，见 [LICENSE](LICENSE)。
 
 ## 手动组数计数器
 
 - 主页面加一、减一和归零会在关联开关开启时重启计时并清零累计触发；未运行时按当前设定启动，关闭时只改组数。
 - preview.7 的定向构建和模拟器交互记录见 `test-results/manual-counter-link-20261117/verification.md`。
+
+## 主界面与应用图标
+
+主界面采用白底和浅蓝色倒计时面板，主要操作位于页面顶部，设置区以细线分隔。应用使用蓝底白色秒表自适应图标。Debug 构建和 Android 15 模拟器验证见 [界面改版验证](test-results/ui-refresh/verification.md)。荣耀 90 真机显示待验收。
 
 ## 技术与构建
 
@@ -26,7 +28,7 @@ preview.7 延续计时器的快捷间隔、自定义间隔、试听、暂停、�
 
 若 JDK 未在 `PATH` 中，先在当前 PowerShell 窗口设置 `$env:JAVA_HOME`。
 
-preview.7 的 Debug/Release 构建、定向计时测试、Release 签名及 Android 15 AVD 交互通过。模拟器验证详情与尚未覆盖项目见 `test-results/manual-counter-link-20261117/verification.md`。荣耀 90 真机的锁屏可听性和厂商后台行为仍待验收。
+荣耀 90 真机的锁屏可听性和厂商后台行为待验收。
 
 本机 E 盘于 2026-10-29 出现磁盘 I/O 与 NTFS 写入错误；原 SDK、AVD 和全局 Gradle 缓存不可作为可靠运行环境。本次恢复工具位于忽略的 `.local/`，构建时设置 `ANDROID_HOME` 与 `ANDROID_SDK_ROOT` 为项目 `.local/android-sdk`、`GRADLE_USER_HOME` 为 `.local/gradle-home`，JDK 仍使用本机 JDK 17。独立 AVD 为 `timelock_recovery_35`，AVD 目录为 `.local/avd`，Android 用户目录为 `.local/android-user`；启动时分别设置 `ANDROID_AVD_HOME`、`ANDROID_USER_HOME`。不要把工具、镜像或签名提交到仓库。
 

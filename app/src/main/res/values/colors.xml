@@ -1,0 +1,18 @@
+<resources>
+    <color name="page">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="ink">#152842</color>
+    <color name="muted">#465B74</color>
+    <color name="accent">#286BB5</color>
+    <color name="control">#FFFFFF</color>
+    <color name="disabled">#F2F5F9</color>
+    <color name="disabled_text">#68788D</color>
+    <color name="ripple">#26286BB5</color>
+    <color name="error">#B42318</color>
+    <color name="icon_mark">#C7E5FF</color>
+    <color name="timer_surface">#F1F7FF</color>
+    <color name="blue_fill">#D7E9FF</color>
+    <color name="blue_border">#91B9E8</color>
+    <color name="control_border">#B3C5D9</color>
+    <color name="section_divider">#D7E2EE</color>
+</resources>

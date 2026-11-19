@@ -1,0 +1,9 @@
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/ripple">
+    <item>
+        <selector>
+            <item android:state_enabled="false" android:drawable="@drawable/disabled_fill" />
+            <item android:state_selected="true" android:drawable="@drawable/accent_fill" />
+            <item android:drawable="@drawable/control_fill" />
+        </selector>
+    </item>
+</ripple>

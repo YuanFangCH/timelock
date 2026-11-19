@@ -1,0 +1,3 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:height="1dp" android:gravity="top" android:drawable="@color/section_divider" />
+</layer-list>

@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F6F8FB"
+    android:background="@color/page"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingTop="28dp"
-        android:paddingEnd="24dp"
+        android:focusableInTouchMode="true"
+        android:paddingStart="16dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="28dp">
 
         <TextView
@@ -19,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="间隔提醒"
-            android:textColor="#142235"
+            android:textColor="@color/ink"
             android:textSize="30sp"
             android:textStyle="bold" />
 
@@ -29,317 +31,373 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="设置间隔，到时响一声并继续循环"
-            android:textColor="#64748B"
+            android:textColor="@color/muted"
             android:textSize="15sp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="提醒间隔"
-            android:textColor="#334155"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/interval_input"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:contentDescription="提醒间隔数值"
-                android:gravity="center"
-                android:hint="30"
-                android:inputType="number"
-                android:maxLength="5"
-                android:padding="8dp"
-                android:selectAllOnFocus="true"
-                android:textColor="#142235"
-                android:textSize="23sp" />
-
-            <Button
-                android:id="@+id/unit_seconds"
-                android:layout_width="wrap_content"
-                android:layout_height="56dp"
-                android:layout_marginStart="8dp"
-                android:minWidth="0dp"
-                android:text="秒"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/unit_minutes"
-                android:layout_width="wrap_content"
-                android:layout_height="56dp"
-                android:minWidth="0dp"
-                android:text="分钟"
-                android:textAllCaps="false" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/range_hint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="可设置 1 秒至 24 小时"
-            android:textColor="#64748B"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="快速设置"
-            android:textColor="#334155"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/quick_30"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="1"
-                android:text="30 秒"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/quick_50"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="1"
-                android:text="50 秒"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/quick_120"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginStart="5dp"
-                android:layout_weight="1"
-                android:text="2 分钟"
-                android:textAllCaps="false" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:text="已完成组数"
-            android:textColor="#334155"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/completed_sets"
-            android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginTop="2dp"
-            android:accessibilityLiveRegion="polite"
-            android:autoSizeMaxTextSize="56sp"
-            android:autoSizeMinTextSize="26sp"
-            android:autoSizeStepGranularity="2sp"
-            android:autoSizeTextType="uniform"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="0 组"
-            android:textColor="#142235"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/decrement_sets"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="1"
-                android:enabled="false"
-                android:minWidth="0dp"
-                android:text="减一"
-                android:textAllCaps="false"
-                android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/reset_sets"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="1"
-                android:enabled="false"
-                android:minWidth="0dp"
-                android:text="归零"
-                android:textAllCaps="false"
-                android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/increment_sets"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_marginStart="5dp"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="加一"
-                android:textAllCaps="false"
-                android:textSize="16sp" />
-        </LinearLayout>
-
-        <Switch
-            android:id="@+id/restart_timer_on_increment"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="6dp"
-            android:checked="true"
-            android:text="操作组数后重启计时"
-            android:textColor="#334155"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/countdown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:gravity="center"
-            android:text="00:30"
-            android:textColor="#142235"
-            android:textSize="72sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/state_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="尚未开始"
-            android:textColor="#52657A"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/error_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:textColor="#B42318"
-            android:textSize="14sp"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/start_pause"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="开始提醒"
-                android:textAllCaps="false"
-                android:textSize="17sp" />
-
-            <Button
-                android:id="@+id/stop"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="停止"
-                android:textAllCaps="false"
-                android:textSize="17sp" />
-        </LinearLayout>
-
-        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="提示音"
-            android:textColor="#334155"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:background="@drawable/timer_background"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <Spinner
-            android:id="@+id/sound_options"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:contentDescription="选择提示音" />
+            <TextView
+                android:id="@+id/countdown"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:autoSizeMaxTextSize="68sp"
+                android:autoSizeMinTextSize="20sp"
+                android:autoSizeStepGranularity="1sp"
+                android:autoSizeTextType="uniform"
+                android:fontFamily="monospace"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:gravity="center"
+                android:text="00:30"
+                android:textColor="@color/ink"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/selected_sound"
+            <TextView
+                android:id="@+id/state_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="尚未开始"
+                android:textColor="@color/muted"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/error_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:textColor="@color/error"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/start_pause"
+                    style="@style/PrimaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="开始提醒"
+                    android:textSize="17sp" />
+
+                <Button
+                    android:id="@+id/stop"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:text="停止"
+                    android:textSize="17sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#52657A"
-            android:textSize="14sp" />
+            android:layout_marginTop="18dp"
+            android:background="@drawable/section_divider"
+            android:orientation="vertical"
+            android:paddingTop="16dp">
 
-        <Button
-            android:id="@+id/choose_phone_sound"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="6dp"
-            android:text="从手机铃声库选择"
-            android:textAllCaps="false" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="提醒间隔"
+                android:textColor="@color/ink"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/preview"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="6dp"
-            android:text="试听当前提示音"
-            android:textAllCaps="false" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/sound_settings"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="6dp"
-            android:text="调整手机媒体音量"
-            android:textAllCaps="false" />
+                <EditText
+                    android:id="@+id/interval_input"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/field_background"
+                    android:contentDescription="提醒间隔数值"
+                    android:gravity="center"
+                    android:hint="30"
+                    android:inputType="number"
+                    android:maxLength="5"
+                    android:padding="8dp"
+                    android:selectAllOnFocus="true"
+                    android:textColor="@color/ink"
+                    android:textSize="23sp" />
 
-        <TextView
-            android:id="@+id/notification_notice"
+                <Button
+                    android:id="@+id/unit_seconds"
+                    style="@style/UnitButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:layout_marginStart="8dp"
+                    android:text="秒" />
+
+                <Button
+                    android:id="@+id/unit_minutes"
+                    style="@style/UnitButton"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:text="分钟" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/range_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="可设置 1 秒至 24 小时"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="快速设置"
+                android:textColor="@color/ink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/quick_30"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="52dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:text="30 秒" />
+
+                <Button
+                    android:id="@+id/quick_50"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="52dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:text="50 秒" />
+
+                <Button
+                    android:id="@+id/quick_120"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="52dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:text="2 分钟" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="21dp"
-            android:textColor="#586B80"
-            android:textSize="13sp" />
+            android:layout_marginTop="18dp"
+            android:background="@drawable/section_divider"
+            android:orientation="vertical"
+            android:paddingTop="16dp">
 
-        <TextView
-            android:id="@+id/battery_notice"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="已完成组数"
+                android:textColor="@color/ink"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/completed_sets"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_marginTop="2dp"
+                android:accessibilityLiveRegion="polite"
+                android:autoSizeMaxTextSize="56sp"
+                android:autoSizeMinTextSize="26sp"
+                android:autoSizeStepGranularity="2sp"
+                android:autoSizeTextType="uniform"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="0 组"
+                android:textColor="@color/ink"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/decrement_sets"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:text="减一"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/reset_sets"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:text="归零"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/increment_sets"
+                    style="@style/PrimaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:text="加一"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/restart_timer_on_increment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:layout_marginTop="6dp"
+                android:checked="true"
+                android:text="操作组数后重启计时"
+                android:textColor="@color/ink"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textColor="#586B80"
-            android:textSize="13sp" />
+            android:layout_marginTop="18dp"
+            android:background="@drawable/section_divider"
+            android:orientation="vertical"
+            android:paddingTop="16dp">
 
-        <Button
-            android:id="@+id/battery_settings"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="提示音"
+                android:textColor="@color/ink"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/sound_options"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="54dp"
+                android:contentDescription="选择提示音" />
+
+            <TextView
+                android:id="@+id/selected_sound"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/muted"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/choose_phone_sound"
+                style="@style/SecondaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="52dp"
+                android:layout_marginTop="6dp"
+                android:text="从手机铃声库选择" />
+
+            <Button
+                android:id="@+id/preview"
+                style="@style/SecondaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="52dp"
+                android:layout_marginTop="6dp"
+                android:text="试听当前提示音" />
+
+            <Button
+                android:id="@+id/sound_settings"
+                style="@style/SecondaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginTop="6dp"
+                android:text="调整手机媒体音量" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="5dp"
-            android:text="打开电池优化设置"
-            android:textAllCaps="false" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/section_divider"
+            android:orientation="vertical"
+            android:paddingTop="16dp">
+
+            <TextView
+                android:id="@+id/notification_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/muted"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/battery_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/muted"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/battery_settings"
+                style="@style/SecondaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginTop="5dp"
+                android:text="打开电池优化设置" />
+        </LinearLayout>
+
     </LinearLayout>
 </ScrollView>

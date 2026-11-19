@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.media.AudioManager
 import android.media.RingtoneManager
 import android.net.Uri
@@ -18,6 +17,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.AdapterView
@@ -86,6 +86,15 @@ class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        if (Build.VERSION.SDK_INT >= 35) {
+            findViewById<View>(R.id.main_scroll).setOnApplyWindowInsetsListener { view, insets ->
+                val edges = insets.getInsets(
+                    WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout() or WindowInsets.Type.ime(),
+                )
+                view.setPadding(edges.left, edges.top, edges.right, edges.bottom)
+                insets
+            }
+        }
         volumeControlStream = AudioManager.STREAM_MUSIC
         bindViews()
         restoreSettings()
@@ -490,15 +499,8 @@ class MainActivity : android.app.Activity() {
     }
 
     private fun updateUnitButtons() {
-        val running = currentState() != TimerSnapshot.STATE_IDLE
-        secondsButton.setTextColor(if (unit == UnitChoice.SECONDS) Color.WHITE else Color.DKGRAY)
-        minutesButton.setTextColor(if (unit == UnitChoice.MINUTES) Color.WHITE else Color.DKGRAY)
-        secondsButton.alpha = if (unit == UnitChoice.SECONDS) 1f else 0.78f
-        minutesButton.alpha = if (unit == UnitChoice.MINUTES) 1f else 0.78f
-        if (running) {
-            secondsButton.alpha = 0.5f
-            minutesButton.alpha = 0.5f
-        }
+        secondsButton.isSelected = unit == UnitChoice.SECONDS
+        minutesButton.isSelected = unit == UnitChoice.MINUTES
     }
 
     private fun renderError(message: String) {

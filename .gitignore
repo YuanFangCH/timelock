@@ -24,4 +24,7 @@ test-results/manual-counter-20261109/*
 !test-results/manual-counter-link-20261117/
 test-results/manual-counter-link-20261117/*
 !test-results/manual-counter-link-20261117/verification.md
+!test-results/ui-refresh/
+test-results/ui-refresh/*
+!test-results/ui-refresh/verification.md
 tests/agent-temp/
